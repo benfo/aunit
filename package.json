@@ -1,0 +1,12 @@
+{
+  "name": "aunit",
+  "version": "1.0.0",
+  "description": "A unit testing library for AutoHotkey",
+  "scripts": {
+    "test": "C:\\\"Program Files\"\\AutoHotkey\\AutoHotkey.exe Tests\\Expect.Test.ahk | more"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {}
+}
