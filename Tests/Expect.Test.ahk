@@ -4,7 +4,7 @@ class expect_tests
 {
   class toBeTrueFalse_tests
   {
-    pass()
+    should_pass()
     {
       expect(true).toBeTrue()
       expect(false).not.toBeTrue()
@@ -12,21 +12,17 @@ class expect_tests
       expect(true).not.toBeFalse()
     }
 
-    fail()
+    should_fail_with_exception()
     {
-      expectFalse := expect(false).throwFailures()
-
+      expectFalse := expect(false)
       expect(expectFalse.toBeTrue.Bind(expectFalse))
         .toThrow("Received: false")
-
       expect(expectFalse.not.toBeFalse.Bind(expectFalse))
         .toThrow("Received: false")
 
-      expectTrue := expect(true).throwFailures()
-
+      expectTrue := expect(true)
       expect(expectTrue.toBeFalse.Bind(expectTrue))
         .toThrow("Received: true")
-
       expect(expectTrue.not.toBeTrue.Bind(expectTrue))
         .toThrow("Received: true")
     }
@@ -34,22 +30,52 @@ class expect_tests
 
   class toBe_tests
   {
-    pass()
+    should_pass()
     {
-      expect(1).toBe(1)
+      expect("a").toBe("a")
       expect(1).not.toBe(2)
     }
 
-    fail()
+    should_fail_with_exception()
     {
-      expectX := expect(1).throwFailures()
-      expect(expectX.toBe.Bind(expectX, 2))
-        .toThrow("Expected: 2")
+      expectOne := expect(1)
+      expect(expectOne.toBe.Bind(expectOne, 2))
+        .toThrow("Expected: 2`nReceived: 1")
 
-      expect(expectX.not.toBe.Bind(expectX, 1))
-        .toThrow("Expected: not 1")
+      expect(expectOne.not.toBe.Bind(expectOne, 1))
+        .toThrow("Expected: not 1`nReceived: 1")
 
     }
+  }
+
+  class toThrow_tests
+  {
+    should_pass()
+    {
+      expect(this.__thrower.Bind(this)).toThrow()
+      expect(this.__thrower.Bind(this)).toThrow("error")
+      expect(this.__noThrow.Bind(this)).not.toThrow()
+    }
+
+    should_fail_with_exception()
+    {
+      expectNoThrow := expect(this.__noThrow.Bind(this))
+      expect(expectNoThrow.toThrow.Bind(expectNoThrow))
+        .toThrow("Received function did not throw")
+
+      expectThrower := expect(this.__thrower.Bind(this))
+      expect(expectThrower.not.toThrow.Bind(expectThrower))
+        .toThrow("Received function did throw")
+
+    }
+
+    __thrower()
+    {
+      throw Exception("error")
+    }
+
+    __noThrow()
+    {}
   }
 }
 

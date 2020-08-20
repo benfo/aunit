@@ -3,6 +3,9 @@
 
 class AUnit
 {
+  static results := []
+  static context := ""
+
   Test(classes*)
   {
     for idx, testClass in classes
@@ -23,42 +26,49 @@ class AUnit
           continue
 
         AUnit.context := { suite: testClass.__Class, test: key }
-        %testFn%(clsInstance)
+
+        try
+        {
+          %testFn%(clsInstance)
+          this.AddPass(key)
+        }
+        catch ex
+        {
+          this.AddFail(ex)
+          continue
+        }
       }
 
       AUnit.context := ""
     }
   }
+
+  AddFail(ex)
+  {
+    result := { state: "fail"
+      , context: ex.context
+      , message: ex.Message
+      , line: ex.line
+      , file: ex.file
+      , toBeFn: toBeFn
+      , isNot: this.isNot }
+
+    AUnit.AddResult(result)
+  }
+
+  AddPass(fn)
+  {
+    result := { state: "pass"
+            , context: AUnit.context
+            , toBeFn: fn
+            , isNot: this.isNot }
+
+    AUnit.AddResult(result)
+  }
+
+  AddResult(result)
+  {
+    this.results.Push(result)
+    Logger.Log(result)
+  }
 }
-
-
-; report()
-; {
-;   totals := { pass: 0, fail: 0, skip: 0 }
-
-;   for idx, result in _Expect.results
-;   {
-;     if (result.state = "pass")
-;     {
-;       totals.pass += 1
-;       StdOutWriteLine("(PASS) " StrReplace(result.context.test, "_", " ") " (" result.context.suite ")")
-;     }
-;     else if (result.state = "skip")
-;     {
-;       ; TODO
-;     }
-;     else
-;     {
-;       totals.fail += 1
-;       msg := result.message "`n       (" result.ex.File ":" result.ex.Line ")"
-;       StdOutWriteLine("(FAIL) " StrReplace(result.context.test, "_", " ") " (" result.context.suite ")`n       " msg)
-;     }
-
-;   }
-
-;   FileAppend % "`nFailed: " totals.fail, *
-;   FileAppend % "`nPassed: " totals.pass, *
-;   if (totals.skip > 0)
-;     FileAppend % "`nSkipped: " totals.skip, *
-;   FileAppend % "`nTotal: " (totals.pass + totals.fail), *
-; }

@@ -1,9 +1,10 @@
 class Expect
 {
-  __New(args*)
+  __New(context, args*)
   {
     this.actual := args[1]
     this.isNot := false
+    this.context := context
   }
 
   toThrow(substring := "")
@@ -23,18 +24,13 @@ class Expect
       }
 
       if (!didThrow ^ this.isNot)
-      {
-        this.recordFail("Received function did " (this.isNot ? "" : "not ") "throw", A_ThisFunc)
-        return
-      }
+        this.throwFail("Received function did " (this.isNot ? "" : "not ") "throw", A_ThisFunc)
 
       if (substring = "")
         return
 
       if (didThrow and (InStr(thrownEx.Message, substring) = 0))
-      {
-        this.recordFail("Expected substring: """ substring """`nReceived: """ thrownEx.Message """", A_ThisFunc)
-      }
+        this.throwFail("Expected substring: """ substring """`nReceived: """ thrownEx.Message """", A_ThisFunc)
     }
   }
 
@@ -43,7 +39,7 @@ class Expect
     if (this.actual = expected) ^ this.isNot
       return
 
-    this.recordFail("Expected: " (this.isNot ? "not " : "") expected, A_ThisFunc)
+    this.throwFail("Expected: " (this.isNot ? "not " : "") expected "`nReceived: " this.actual, A_ThisFunc)
   }
 
   toBeTrue()
@@ -51,7 +47,7 @@ class Expect
     if this.actual ^ this.isNot
       return
 
-    this.recordFail("Received: " (this.actual ? "true" : "false"), A_ThisFunc)
+    this.throwFail("Received: " (this.actual ? "true" : "false"), A_ThisFunc)
   }
 
   toBeFalse()
@@ -59,10 +55,10 @@ class Expect
     if !this.actual ^ this.isNot
       return
 
-    this.recordFail("Received: " (this.actual ? "true" : "false"), A_ThisFunc)
+    this.throwFail("Received: " (this.actual ? "true" : "false"), A_ThisFunc)
   }
 
-  recordFail(exception, toBeFn)
+  throwFail(exception, toBeFn)
   {
     try
     {
@@ -70,25 +66,15 @@ class Expect
     }
     catch ex
     {
-      if (this.throwFailures = true)
-      {
-        throw ex
-      }
-
-      info := { state: "fail"
-        , context: AUnit.context
+      throw { file: ex.File
+        , line: ex.Line
         , message: ex.Message
-        , ex: ex
+        , what: ex.What
+        , context: AUnit.context
         , toBeFn: toBeFn
-        , isNot: this.isNot }
-      Logger.Log(info)
+        , isNot: this.isNot
+        , state: "fail" }
     }
-  }
-
-  throwFailures(value := true)
-  {
-    this.throwFailures := value
-    return this
   }
 
   not
@@ -101,7 +87,7 @@ class Expect
   }
 }
 
-expect(params*)
+expect(args*)
 {
-  return new Expect(params*)
+  return new Expect(AUnit.Context, args*)
 }
